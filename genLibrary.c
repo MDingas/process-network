@@ -34,6 +34,10 @@ void removeNewline(char* buf){
             buf[i] = '\0';
 }
 
+void addNewline(char* buf){
+      strcat(buf,"\n");
+}
+
 char** splitAt(char* string, char delimiter){
 
     char** output = malloc(sizeof(char*) * PIPE_BUF);

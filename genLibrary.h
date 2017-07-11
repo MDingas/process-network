@@ -17,6 +17,7 @@ ssize_t readln(int fd, char* buffer, long maxBytes);
 int prefixMatch(char* prefix,char* word);
 void cleanBuf(char* buf,int size);
 void removeNewline(char* buf);
+void addNewline(char* bufer);
 char* longToString(long num,long size); /* convert long to string */
 char** splitAt(char* string,char delimiter); /* like Haskell's splitAt */
 int eventNums(char** events);
