@@ -46,22 +46,16 @@ int main(int argc,char** argv){
     char* operation = argv[2];
     long value = atol(argv[3]);
 
-    char buffer[PIPE_BUF];
-
+    char buffer[PIPE_BUF]; cleanBuf(buffer,PIPE_BUF);
     while(1){
+        while(readln(0,buffer,sizeof(buffer)) > 0){
+            removeNewline(buffer);
+            if(filterEvent(column,operation,value,buffer) == 1){
+                strcat(buffer,"\n");
+                if(write(1,buffer,strlen(buffer)) == -1){ errorWritingTerminal(); }
+                cleanBuf(buffer,sizeof(buffer));
+            }
 
-        int status;
-        cleanBuf(buffer,PIPE_BUF);
-
-        status = read(0,buffer,sizeof(buffer));
-        if(status == -1) {
-            fprintf(stderr,"Error reading"); exit(-1);}
-        if(status == 0) exit(0);
-
-        if(filterEvent(column,operation,value,buffer) == 1){
-            strcat(buffer,"\n");
-            if(write(1,buffer,strlen(buffer)) == -1){ errorWritingTerminal(); }
-            cleanBuf(buffer,PIPE_BUF);
         }
     }
 
