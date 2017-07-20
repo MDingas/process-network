@@ -1,0 +1,5 @@
+node 1 const 6
+node 2 const 6
+node 3 const 6
+connect 1 2
+connect 2 3
