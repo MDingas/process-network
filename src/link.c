@@ -28,10 +28,10 @@ int main(int argc,char** argv){
 	int statusWriteBuffer;
 
 	while( (statusReadBuffer = readln(statusR,buffer,sizeof(buffer))) > 0){
-		if(statusReadBuffer < 0){ fprintf(stderr,"Error reading from first processes's output\n"); exit(-1); }
+		if(statusReadBuffer < 0){ perror("Error reading from first processes's output\n"); exit(-1); }
 
 		statusWriteBuffer =	write(statusW,buffer,strlen(buffer));
-		if(statusWriteBuffer < 0){ fprintf(stderr,"Error writing to second processes's input\n"); exit(-1); }
+		if(statusWriteBuffer < 0){ perror("Error writing to second processes's input\n"); exit(-1); }
     cleanBuf(buffer,PIPE_BUF);
 	}
 

@@ -38,7 +38,7 @@ void handler(int sig){
             safePrintf("[    ]Reseting...\n");
             clean();
             mainPID = 0;
-            execl("./controller","./controller",NULL);
+            execl("bin/controller","bin/controller",NULL);
             clean();
             errorExecuting();
         }
@@ -62,8 +62,8 @@ void clean(){
     safePrintf("Cleaning setup...\n");
     for(int i = 0; i < MAX_IDS; i++){
         if(nodes[i] != 0){
-            sprintf(write, "%s%d%s", "./temp/", i, "W");
-            sprintf(read, "%s%d%s", "./temp/", i, "R");
+            sprintf(write, "%s%d%s", "temp/", i, "W");
+            sprintf(read, "%s%d%s", "temp/", i, "R");
             kill(nodes[i],SIGKILL);
             unlink(write);
             unlink(read);
@@ -104,8 +104,8 @@ int createPipe(int id){
     char write[PIPE_NAME_SIZE];
     char read[PIPE_NAME_SIZE];
 
-    sprintf(write, "%s%d%s", "./temp/", id, "W");
-    sprintf(read, "%s%d%s", "./temp/", id, "R");
+    sprintf(write, "%s%d%s", "temp/", id, "W");
+    sprintf(read, "%s%d%s", "temp/", id, "R");
 
     if(mkfifo(write,0666) == -1){
         clean();
@@ -125,7 +125,7 @@ int connectNodes(char* command){
     char** splitCommands = splitAt(command,' ');
 
     if(eventNums(splitCommands) < 3){
-        fprintf(stderr,"[ERROR]usage: connect <id1> <list of ids>\n");
+        perror("[ERROR]usage: connect <id1> <list of ids>\n");
         exit(-1);
     }
 
@@ -140,7 +140,7 @@ int connectNodes(char* command){
     connectIds[j] = -1;
 
     char write[PIPE_NAME_SIZE];
-    sprintf(write,"./temp/%dW",id);
+    sprintf(write,"temp/%dW",id);
 
     /* connect node write to the N read nodes */
     for(int i = 0; connectIds[i] != -1; i++){
@@ -155,8 +155,8 @@ int connectNodes(char* command){
         /* Son process will call process that redirects pipes */
         if(pid == 0){
             char read[PIPE_NAME_SIZE];
-            sprintf(read,"./temp/%dR",connectIds[i]);
-            execl("./link","./link",write,read,NULL);
+            sprintf(read,"temp/%dR",connectIds[i]);
+            execl("bin/link","bin/link",write,read,NULL);
             clean();
             errorExecuting();
         }
@@ -176,7 +176,7 @@ int disconnectNodes(char* command){
     char** splitCommands = splitAt(command,' ');
 
     if(eventNums(splitCommands) != 3){
-        fprintf(stderr,"[ERROR]usage: disconnect <id>\n");
+        perror("[ERROR]usage: disconnect <id>\n");
         exit(-1);
     }
 
@@ -189,7 +189,7 @@ int disconnectNodes(char* command){
         int status = kill(process,SIGKILL);
         if(status == -1){
             clean();
-            fprintf(stderr,"[ERROR]killing proccess\n");
+            perror("[ERROR]killing proccess\n");
             exit(-1);
         }
         /* reset */
@@ -214,7 +214,7 @@ int createNode(char* command){
     char** splitCommand = splitAt(command,' ');
 
     if(eventNums(splitCommand) < 3){
-        fprintf(stderr,"[ERROR]usage: node <id> <commands with args>\n");
+        perror("[ERROR]usage: node <id> <commands with args>\n");
         exit(-1);
     }
 
@@ -238,16 +238,16 @@ int createNode(char* command){
 
     switch(commandFlag){
         case(1):
-            splitCommand[2] = "./const";
+            splitCommand[2] = "bin/const";
             break;
         case(2):
-            splitCommand[2] = "./filter";
+            splitCommand[2] = "bin/filter";
             break;
         case(3):
-            splitCommand[2] = "./window";
+            splitCommand[2] = "bin/window";
             break;
         case(4):
-            splitCommand[2] = "./spawn";
+            splitCommand[2] = "bin/spawn";
             break;
         default:
             break;
@@ -286,8 +286,8 @@ int createNode(char* command){
         /* Position write and read pipes accordingly */
         char write[PIPE_NAME_SIZE];
         char read[PIPE_NAME_SIZE];
-        sprintf(write,"./temp/%dW",id);
-        sprintf(read,"./temp/%dR",id);
+        sprintf(write,"temp/%dW",id);
+        sprintf(read,"temp/%dR",id);
 
         /* Open fifos */
         int openW = open(write,O_WRONLY);
@@ -326,7 +326,7 @@ int injectNode(char* command){
     char** splitCommand = splitAt(command,' ');
     if(eventNums(splitCommand) < 3){
         clean();
-        fprintf(stderr,"[ERROR]usage: inject <id> <commands w/ args>\n");
+        perror("[ERROR]usage: inject <id> <commands w/ args>\n");
         exit(-1);
     }
     char** cmds = malloc(eventNums(splitCommand) - 2);
@@ -348,7 +348,7 @@ int injectNode(char* command){
         /* Create pipe */
 
         char bad[PIPE_NAME_SIZE];
-        sprintf(bad,"./temp/%dR",id);
+        sprintf(bad,"temp/%dR",id);
         int badop = open(bad,O_WRONLY);
         dup2(badop,1);
 
@@ -373,28 +373,28 @@ int parseCommand(char* command){
     if(prefixMatch("node",command)){
         if(createNode(command) == -1){
             clean();
-            fprintf(stderr,"[ERROR]creating node\n");
+            perror("[ERROR]creating node\n");
             exit(-1);
         }
 
     }else if(prefixMatch("inject",command)){
         if(injectNode(command) == -1){
             clean();
-            fprintf(stderr,"[ERROR]injecting node\n");
+            perror("[ERROR]injecting node\n");
             exit(-1);
         }
 
     }else if(prefixMatch("disconnect",command)){
         if(disconnectNodes(command) == -1){
             clean();
-            fprintf(stderr,"[ERROR]disconnecting nodes\n");
+            perror("[ERROR]disconnecting nodes\n");
             exit(-1);
         }
 
     }else if(prefixMatch("connect",command)){
         if(connectNodes(command) == -1){
             clean();
-            fprintf(stderr,"[ERROR]connecting nodes\n");
+            perror("[ERROR]connecting nodes\n");
             exit(-1);
         }
     }else if(prefixMatch("help",command)){
@@ -419,7 +419,7 @@ void mainParser(){
 
     if(!strcmp(file,"help\n")){
         printHelp();
-        execl("./controller","./controller",NULL);
+        execl("bin/controller","bin/controller",NULL);
         clean();
         errorExecuting();
     }
@@ -479,7 +479,7 @@ int main(){
     sigemptyset(&sigint_sa.sa_mask);
     sigint_sa.sa_flags = SA_NODEFER; /* Dont block signals to any child process */
     if (sigaction(SIGINT, &sigint_sa, NULL) == -1){
-        fprintf(stderr,"[ERROR]atributing signalhandler\n");
+        perror("[ERROR]atributing signalhandler\n");
         exit(-1);
     }
 
