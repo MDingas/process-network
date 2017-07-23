@@ -8,6 +8,71 @@ int nodes[MAX_IDS] = { 0 }; /* Index process ids by node ids , pid of node with 
 int connections[MAX_IDS][MAX_IDS] = { { 0 } }; /* Same idea for connections matrix, similar to connections matrix of graphs */
 int mainPID = 0; /* mainPID if exists so only the main process handles SIGKILL and SIGINT signals */
 
+void mute_all_leechers_except(int seeder,int exception){
+    for(int i = 0; i < MAX_IDS; i++){
+        if (i != exception && connections[seeder][i] != 0) {
+            kill(connections[seeder][i],SIGTSTP);
+        }
+    }
+}
+
+void open_all_leechers(int seeder){
+    // SIGCONT sent to processes that are not stoped simply ignore the signal
+    for(int i = 0; i < MAX_IDS; i++){
+        if (connections[seeder][i] != 0 )
+            kill(connections[seeder][i],SIGCONT);
+    }
+}
+
+int find_only_son(int seeder){
+    for (int i = 0; i < MAX_IDS; i++)
+        if (connections[seeder][i] != 0)
+            return i;
+    return -1;
+}
+
+int leechers(int seeder){
+    int leechers_num = 0;
+    for(int i = 0; i < MAX_IDS; i++)
+        if(connections[seeder][i] != 0)
+            leechers_num++;
+    return leechers_num;
+}
+
+void handle_injection(char* command,int current_node){
+
+    if (leechers(current_node) == 0) { // we reached a node with no sons, inject
+        //printf("got 0\n");
+
+        injectNode(command);
+        char current_node_as_string[PIPE_NAME_SIZE];
+        sprintf(current_node_as_string,"%d",current_node);
+        if (!fork()) { // create process to save results
+            execl("bin/saveResults","bin/saveResults",current_node_as_string,NULL);
+            errorExecuting();
+        }
+        wait(NULL); // wait for output to be saved
+
+    } else if (leechers(current_node) == 1) { // only one son, continue chain without pausing communication
+        //printf("got 1\n");
+
+        int only_son = find_only_son(current_node);
+        if(only_son != -1)
+            handle_injection(command,only_son);
+    } else{ // multiple sons, do one communication at a time
+        //printf("got >1\n");
+
+        for(int i = 0; i < MAX_IDS; i++){
+            if (connections[current_node][i] != 0){
+                mute_all_leechers_except(current_node,i);
+                handle_injection(command,i);
+                open_all_leechers(current_node);
+            }
+        }
+
+    }
+}
+
 void handler(int sig){
     char leave[10] = "n";
 
@@ -145,6 +210,7 @@ int connectNodes(char* command){
     /* connect node write to the N read nodes */
     for(int i = 0; connectIds[i] != -1; i++){
         int pid;
+
         if( (pid = fork()) == -1){
             clean();
             errorForking();
@@ -153,6 +219,7 @@ int connectNodes(char* command){
         /* Dad process saves the pid as the connection between the 2 processes */
         if(pid > 0){ connections[id][connectIds[i]] = pid; }
         /* Son process will call process that redirects pipes */
+
         if(pid == 0){
             char read[PIPE_NAME_SIZE];
             sprintf(read,"temp/%dR",connectIds[i]);
@@ -322,6 +389,7 @@ int createNode(char* command){
 int injectNode(char* command){
     safePrintf("[START]injecting node\n");
 
+
     removeNewline(command);
     char** splitCommand = splitAt(command,' ');
     if(eventNums(splitCommand) < 3){
@@ -339,11 +407,9 @@ int injectNode(char* command){
     }
     cmds[j] = NULL;
     int id = atoi(splitCommand[1]);
+    int pid;
 
-    pid_t pid = fork();
-
-    if(pid == 0){
-
+    if ( (pid = fork()) == 0 ) {
 
         /* Create pipe */
 
@@ -364,6 +430,7 @@ int injectNode(char* command){
 
     }
 
+    waitpid(pid,NULL,-1);
     safePrintf("[SUCC]node injected\n");
     return 0;
 }
@@ -378,11 +445,17 @@ int parseCommand(char* command){
         }
 
     }else if(prefixMatch("inject",command)){
-        if(injectNode(command) == -1){
+        /* parsing */
+        removeNewline(command);
+        char** splitCommand = splitAt(command,' ');
+        if(eventNums(splitCommand) < 3){
             clean();
-            perror("[ERROR]injecting node\n");
+            perror("[ERROR]usage: inject <id> <commands w/ args>\n");
             exit(-1);
         }
+        int id = atoi(splitCommand[1]);
+
+        handle_injection(command,id);
 
     }else if(prefixMatch("disconnect",command)){
         if(disconnectNodes(command) == -1){
