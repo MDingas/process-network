@@ -26,8 +26,8 @@ int main(int argc,char** argv){
 
     int fp_create = open(storeFile, O_CREAT,0666);
     if( fp_create == -1){
-          perror("[ERROR]creating fifo");
-          exit(-1);
+        perror("[ERROR]creating fifo");
+        exit(-1);
     }
 
     int fp_store = open(storeFile, O_APPEND | O_WRONLY);
@@ -39,12 +39,13 @@ int main(int argc,char** argv){
     dup2(fp_fifo,0); close(fp_fifo);
     dup2(fp_store,1); close(fp_store);
 
-    while (read(0,buffer,sizeof(buffer)) > 0) {
+    //while (read(0,buffer,sizeof(buffer)) > 0) {
+    read(0,buffer,sizeof(buffer));
 
-        if (write(1,buffer,strlen(buffer)) == -1 ) {
-            errorWritingTerminal();
-        }
+    if (write(1,buffer,strlen(buffer)) == -1 ) {
+        errorWritingTerminal();
     }
+    //}
 
     return 0;
 }

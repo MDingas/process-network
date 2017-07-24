@@ -53,9 +53,9 @@ void handle_injection(char* command,int current_node){
         }
 
         injectNode(command);
-        sleep(1);
-        kill(pid,SIGKILL);
-        //wait(NULL); // wait for output to be saved
+        //sleep(1);
+        //kill(pid,SIGKILL);
+        wait(NULL); // wait for output to be saved
 
     } else if (leechers(current_node) == 1) { // only one son, continue chain without pausing communication
 
@@ -438,7 +438,8 @@ int injectNode(char* command){
 
     }
 
-    waitpid(pid,NULL,-1);
+    wait(NULL);
+    //waitpid(pid,NULL,-1);
     safePrintf("[SUCC]node injected\n");
     return 0;
 }
