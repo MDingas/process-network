@@ -42,25 +42,27 @@ int leechers(int seeder){
 void handle_injection(char* command,int current_node){
 
     if (leechers(current_node) == 0) { // we reached a node with no sons, inject
-        //printf("got 0\n");
 
-        injectNode(command);
         char current_node_as_string[PIPE_NAME_SIZE];
         sprintf(current_node_as_string,"%d",current_node);
-        if (!fork()) { // create process to save results
+        int pid;
+
+        if ( (pid = fork()) == 0 ) { // create process to save results
             execl("bin/saveResults","bin/saveResults",current_node_as_string,NULL);
             errorExecuting();
         }
-        wait(NULL); // wait for output to be saved
+
+        injectNode(command);
+        sleep(1);
+        kill(pid,SIGKILL);
+        //wait(NULL); // wait for output to be saved
 
     } else if (leechers(current_node) == 1) { // only one son, continue chain without pausing communication
-        //printf("got 1\n");
 
         int only_son = find_only_son(current_node);
         if(only_son != -1)
             handle_injection(command,only_son);
     } else{ // multiple sons, do one communication at a time
-        //printf("got >1\n");
 
         for(int i = 0; i < MAX_IDS; i++){
             if (connections[current_node][i] != 0){
@@ -119,6 +121,7 @@ void handler(int sig){
 /* CLEAN
  *	set every pid variable to zero
  *	remove every read/write named pipe
+ *	delete every output file
  */
 void clean(){
     char write[PIPE_NAME_SIZE];
@@ -142,6 +145,11 @@ void clean(){
                 connections[i][j] = 0;
             }
         }
+
+    if (!fork()){ // call script that deletes all output files in the output/ directory
+        execl("bin/deleteOutput","bin/deleteOutput",NULL);
+        errorExecuting();
+    }
 }
 
 void printHelp(){
@@ -419,11 +427,11 @@ int injectNode(char* command){
         dup2(badop,1);
 
 
-        if(cmds[0][0] != '.')
+        if (cmds[0][0] != '.') {
             execvp(cmds[0],cmds);
-        else
+        } else{
             execv(cmds[0],cmds);
-
+        }
 
         clean();
         errorExecuting();
