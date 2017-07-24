@@ -1,0 +1,1 @@
+All output goes into files stored here. The output from node 3, for example, is stored on file "3out". Important: all files get deleted when user leaves session (ctrl + c) or closes program (ctrl + \)
