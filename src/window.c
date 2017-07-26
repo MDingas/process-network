@@ -65,34 +65,34 @@ int main(int argc, char** argv){
     long column = atol(argv[1]);
     char* operation = argv[2];
     long lines = atol(argv[3]);
-    char buffer[PIPE_BUF]; cleanBuf(buffer,PIPE_BUF);
+    char buffer[PIPE_BUF]; clean_buffer(buffer,PIPE_BUF);
     long colValues[PIPE_BUF];
 
     int i = 0;
 
     while(1){ /* perpetually open */
 
-        if(read(0,buffer,sizeof(buffer)) == -1) { errorReadingTerminal(); }
+        if(read(0,buffer,sizeof(buffer)) == -1) { error_reading_terminal(); }
         if(strlen(buffer) > 0){ /* no input and new line */
 
-            removeNewline(buffer);
-            if(eventNums(splitAt(buffer,':')) < column){
+            remove_newline(buffer);
+            if(event_number(split_with_delimiter(buffer,':')) < column){
                 perror("[ERROR]invalid column\n");
             }
             else{
-                long colVal = getColumn(buffer,column);
+                long colVal = get_column(buffer,column);
 
                 colValues[i] = colVal;
                 long out = window(operation,colValues,lines,i);
                 i++;
-                char* toAppend = longToString(out,NUM_DIGITS);
-                constEvent(buffer,toAppend);
+                char* toAppend = long_to_string(out,NUM_DIGITS);
+                append_value(buffer,toAppend);
                 buffer[strlen(buffer)] = '\n';
 
                 if(write(1,buffer,strlen(buffer)) == -1)
-                    errorWritingTerminal();
+                    error_writing_terminal();
 
-                cleanBuf(buffer,PIPE_BUF);
+                clean_buffer(buffer,PIPE_BUF);
             }
         }
     }

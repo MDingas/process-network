@@ -1,13 +1,23 @@
 #include "genLibrary.h"
 
-void safePrintf(char* text){
+/* SAFE PRINTF
+ *
+ * since printf is unsafe when using read() and write() system calls, this was needed
+ *
+ */
+void safe_printf(char* text){
     if( write(1,text,strlen(text)) == -1){
         perror("[ERROR]writing to terminal\n");
         exit(-1);
     }
 }
 
-int prefixMatch(char* prefix,char* word){
+/* PREFIX MATCH
+ *
+ * Used for parsing user input, do two words share the same prefix?
+ *
+ */
+int prefix_match(char* prefix,char* word){
 
     int i = 0;
     if(!word)
@@ -18,33 +28,44 @@ int prefixMatch(char* prefix,char* word){
             return 0;
         i++;
     }
-    if(prefix[i] != '\0') // otherwise prefixMatch("Diana","D") is a-ok and we don't want that
+    if(prefix[i] != '\0') // otherwise prefix_match("Diana","D") is a-ok and we don't want that
         return 0;
     return 1;
 }
 
-void cleanBuf(char* buf,int size){
+/* CLEAN BUFFER
+ *
+ * Fill a buffer with '\0'
+ *
+ */
+void clean_buffer(char* buf,int size){
     for(int i = 0; i < size ; i++)
         buf[i] = '\0';
 }
 
-void removeNewline(char* buf){
+void remove_newline(char* buf){
     for(int i = 0; buf[i] != '\0'; i++)
         if(buf[i] == '\n')
             buf[i] = '\0';
 }
 
-void addNewline(char* buf){
+void add_newline(char* buf){
       strcat(buf,"\n");
 }
 
-char** splitAt(char* string, char delimiter){
+/* Split a word by a certain delimiter
+ * Currently the function wastes a lot of memory and isn't very efficient
+ *
+ * f("test:one:two",':') -> {"test","one","two",NULL}
+ *
+ */
+char** split_with_delimiter(char* string, char delimiter){
 
     char** output = malloc(sizeof(char*) * PIPE_BUF);
     for(int i = 0; string[i] != '\0'; i++){
 
         output[i] = malloc(sizeof(char) * PIPE_BUF);
-        cleanBuf(output[i],PIPE_BUF);
+        clean_buffer(output[i],PIPE_BUF);
     }
 
     int j = 0;
@@ -84,7 +105,10 @@ int getBytes(char** strings){
     return sum;
 }
 
-char* unsplitAs(char** strings,char delimiter){
+/*
+ * f("{"test","one","two"},'!') -> test!one!two
+ */
+char* merge_strings(char** strings,char delimiter){
     int size = getBytes(strings);
     char* output = malloc(sizeof(char)*size + 20); /* arbitrary 20 */
     for(int i = 0; strings[i] != NULL; i++){
@@ -96,31 +120,37 @@ char* unsplitAs(char** strings,char delimiter){
     return output;
 }
 
-int eventNums(char** events){
+int event_number(char** events){
     int i = 0;
     for(;events[i] != NULL; i++);
 
     return i;
 }
 
-
-char* longToString(long num,long size){
+char* long_to_string(long num,long size){
     char* output = malloc(sizeof(char) * NUM_DIGITS);
     snprintf(output,size,"%ld",num);
 
     return output;
 }
 
-long getColumn(char* event,long column){
-    removeNewline(event);
-    char** split = splitAt(event,':');
+
+/*
+ * get_column("3:9:10",2) -> 9
+ */
+long get_column(char* event,long column){
+    remove_newline(event);
+    char** split = split_with_delimiter(event,':');
     long output = atol(split[column-1]);
     free(split);
     return output;
 }
 
 
-void constEvent(char* event,char* const constval){
+/*
+ * append_value("1:2:3",10) -> "1:2:3:10"
+ */
+void append_value(char* event,char* const constval){
 
     char* constvalColon = malloc(sizeof(char) * PIPE_BUF);
     constvalColon[0] = '\0';
@@ -130,6 +160,9 @@ void constEvent(char* event,char* const constval){
 
 }
 
+/*
+ * read a single line from input
+ */
 ssize_t readln(int fp, char* buf, long maxBytes){
     char c;
     int status;

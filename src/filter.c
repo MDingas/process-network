@@ -1,8 +1,8 @@
-#include "genLibrary.h" /* filterEvent() cleanBuf() */
+#include "genLibrary.h" /* filterEvent() clean_buffer() */
 
 int filterEvent(long column,char* operator,long value,char* event){
 
-    long eventVal = getColumn(event,column);
+    long eventVal = get_column(event,column);
 
     if(!strcmp(operator,"=")){
         return( (eventVal == value) ? 1 : 0);
@@ -28,8 +28,7 @@ int filterEvent(long column,char* operator,long value,char* event){
     }
 }
 
-/*Pass the events through only if it passes a premisse
- *
+/*
  * filter <column> <comparator> <value> *
  * filter 2 >= 3 1:2:3:4  -> (empty)
  * filter 2 < 3  1:2:3:4  -> 1:2:3:4
@@ -46,14 +45,14 @@ int main(int argc,char** argv){
     char* operation = argv[2];
     long value = atol(argv[3]);
 
-    char buffer[PIPE_BUF]; cleanBuf(buffer,PIPE_BUF);
+    char buffer[PIPE_BUF]; clean_buffer(buffer,PIPE_BUF);
     while(1){
         while(readln(0,buffer,sizeof(buffer)) > 0){
-            removeNewline(buffer);
+            remove_newline(buffer);
             if(filterEvent(column,operation,value,buffer) == 1){
-                addNewline(buffer);
-                if(write(1,buffer,strlen(buffer)) == -1){ errorWritingTerminal(); }
-                cleanBuf(buffer,sizeof(buffer));
+                add_newline(buffer);
+                if(write(1,buffer,strlen(buffer)) == -1){ error_writing_terminal(); }
+                clean_buffer(buffer,sizeof(buffer));
             }
 
         }

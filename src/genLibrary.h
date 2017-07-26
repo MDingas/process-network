@@ -12,15 +12,15 @@
 #define NUM_DIGITS 50 /* Max number of digits in a single number of an event */
 #define MAX_IDS 100 /* Maximum number of ids in an array of nodes and matrix of node connections */
 
-void safePrintf(char* text);
+void safe_printf(char* text);
 ssize_t readln(int fd, char* buffer, long maxBytes);
-int prefixMatch(char* prefix,char* word);
-void cleanBuf(char* buf,int size);
-void removeNewline(char* buf);
-void addNewline(char* bufer);
-char* longToString(long num,long size); /* convert long to string */
-char** splitAt(char* string,char delimiter); /* like Haskell's splitAt */
-int eventNums(char** events);
-long getColumn(char* event,long column); /* what's the nr at that column */
-char* unsplitAs(char** strings,char delimiter);
-void constEvent(char* event,char* const constval); /* add number to single event */
+int prefix_match(char* prefix,char* word);
+void clean_buffer(char* buf,int size);
+void remove_newline(char* buf);
+void add_newline(char* bufer);
+char* long_to_string(long num,long size); /* convert long to string */
+char** split_with_delimiter(char* string,char delimiter);
+int event_number(char** events);
+long get_column(char* event,long column); /* what's the nr at that column */
+char* merge_strings(char** strings,char delimiter);
+void append_value(char* event,char* const constval); /* add number to single event */

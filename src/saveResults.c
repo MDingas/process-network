@@ -1,6 +1,11 @@
 #include "genLibrary.h"
 
-// saveResults 3 -> read from 3W and save to 3out.txt
+/*
+ * When called, it saves all output of a node into a permanent file
+ * Essentially, it reads from the nodes write pipe and saves into a permanent file in the output directory
+ *
+ *
+ */
 
 int main(int argc,char** argv){
 
@@ -14,11 +19,11 @@ int main(int argc,char** argv){
     char writeFile[PIPE_NAME_SIZE];
     sprintf(writeFile,"temp/%dW",id);
 
-    char buffer[PIPE_BUF]; cleanBuf(buffer,PIPE_BUF);
+    char buffer[PIPE_BUF]; clean_buffer(buffer,PIPE_BUF);
 
     int fp_fifo = open(writeFile,O_RDONLY);
     if (fp_fifo == -1) {
-        errorOpeningFile();
+        error_opening_file();
     }
 
     char storeFile[PIPE_NAME_SIZE];
@@ -39,13 +44,13 @@ int main(int argc,char** argv){
     dup2(fp_fifo,0); close(fp_fifo);
     dup2(fp_store,1); close(fp_store);
 
-    //while (read(0,buffer,sizeof(buffer)) > 0) {
-    read(0,buffer,sizeof(buffer));
-
-    if (write(1,buffer,strlen(buffer)) == -1 ) {
-        errorWritingTerminal();
+    if (read(0,buffer,sizeof(buffer)) == -1) {
+         error_reading_terminal();
     }
-    //}
+
+    if (write(1,buffer,strlen(buffer)) == -1) {
+        error_writing_terminal();
+    }
 
     return 0;
 }

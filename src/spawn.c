@@ -1,4 +1,4 @@
-#include "genLibrary.h" /* cleanBuf() constEvent() removeNewline() */
+#include "genLibrary.h" /* clean_buffer() append_value() remove_newline() */
 
 /* Execute a command and append return status to end of line
  *
@@ -18,16 +18,16 @@ int main(int argc,char** argv){
         commandArgs[argc] = NULL;
 
         char buffer[PIPE_BUF];
-        cleanBuf(buffer,PIPE_BUF);
+        clean_buffer(buffer,PIPE_BUF);
 
-        if(read(0,buffer,sizeof(buffer)) == -1){ errorReadingTerminal(); }
+        if(read(0,buffer,sizeof(buffer)) == -1){ error_reading_terminal(); }
         if(strlen(buffer) != 0){ /* no input and newLine */
-            removeNewline(buffer);
+            remove_newline(buffer);
 
             /* Execute command with forked process */
             pid_t pd;
 
-            if( (pd = fork()) == -1){ errorForking(); }
+            if( (pd = fork()) == -1){ error_forking(); }
 
             /* son process */
             if(pd == 0){ execvp(commandArgs[0],commandArgs); }
@@ -36,14 +36,14 @@ int main(int argc,char** argv){
             int status;
             waitpid(pd,&status,0);
 
-            char* stringStatus = longToString(status,NUM_DIGITS);
+            char* stringStatus = long_to_string(status,NUM_DIGITS);
 
             /* reuse the const function */
-            constEvent(buffer,stringStatus);
+            append_value(buffer,stringStatus);
             strcat(buffer,"\n");
 
-            if(write(1,buffer,strlen(buffer)) == -1){ errorWritingTerminal(); }
-            cleanBuf(buffer,sizeof(buffer));
+            if(write(1,buffer,strlen(buffer)) == -1){ error_writing_terminal(); }
+            clean_buffer(buffer,sizeof(buffer));
         }
     }
 

@@ -7,6 +7,8 @@
  * AFTER:
  *
  * in -----> A -----> B -----> out
+ *
+ * Essentially this program reads from A's write pipe and writes to B's read pipe, perpetually
  */
 
 int main(int argc,char** argv){
@@ -23,7 +25,7 @@ int main(int argc,char** argv){
 
 	/* read from A while possible, and write to B */
 
-	char buffer[PIPE_BUF]; cleanBuf(buffer,PIPE_BUF);
+	char buffer[PIPE_BUF]; clean_buffer(buffer,PIPE_BUF);
 	int statusReadBuffer;
 	int statusWriteBuffer;
 
@@ -32,7 +34,7 @@ int main(int argc,char** argv){
 
 		statusWriteBuffer =	write(statusW,buffer,strlen(buffer));
 		if(statusWriteBuffer < 0){ perror("Error writing to second processes's input\n"); exit(-1); }
-    cleanBuf(buffer,PIPE_BUF);
+    clean_buffer(buffer,PIPE_BUF);
 	}
 
 	return 0;
