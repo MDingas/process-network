@@ -1,9 +1,5 @@
-node 1 const PHASE1
-node 2 filter 1 > 2
-node 3 const BIG2
-node 4 filter 1 <= 2
-node 5 const LESS2
+node 1 const 10
+node 2 const 20
+node 3 const 30
 connect 1 2
-connect 1 4
 connect 2 3
-connect 4 5

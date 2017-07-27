@@ -1,5 +1,9 @@
 node 1 const 10
 node 2 const 20
 node 3 const 30
+node 4 const 999
+node 5 const 666
 connect 1 2
 connect 2 3
+connect 1 4
+connect 4 5
