@@ -5,6 +5,7 @@
 /* GLOBAL VARIABLES SETUP */
 
 int g_nodes[MAX_IDS] = { 0 }; /* Index process ids by node ids , pid of node with id 1 gets saved on index 1 */
+int g_savingScripts[MAX_IDS] = { 0 }; /* Saves by index the processes that save the output into a permanent file */
 int g_connections[MAX_IDS][MAX_IDS] = { { 0 } }; /* Same idea for connections matrix, similar to connections matrix of graphs */
 int g_mainPID = 0; /* mainPID if exists so only the main process handles SIGKILL and SIGINT signals */
 
@@ -77,13 +78,18 @@ void clean(){
             g_nodes[i] = 0;
         }
     }
-    for(int i = 0; i < MAX_IDS; i++)
+    for(int i = 0; i < MAX_IDS; i++){
         for(int j = 0; j < MAX_IDS; j++){
             if(g_connections[i][j] != 0){
                 kill(g_connections[i][j],SIGKILL);
                 g_connections[i][j] = 0;
             }
         }
+        if(g_savingScripts[i] != 0){
+            kill(g_savingScripts[i],SIGKILL);
+            g_savingScripts[i] = 0;
+        }
+    }
 
     if (!fork()){ /* call script that deletes all output files in the output/ directory */
         execl("bin/deleteOutput","bin/deleteOutput",NULL);
@@ -182,8 +188,8 @@ int connect_nodes(char* command){
 
         /* Dad process saves the pid as the connection between the 2 processes */
         if(pid > 0){ g_connections[id][connectIds[i]] = pid; }
-        /* Son process will call process that redirects pipes */
 
+        /* Son process will call process that redirects pipes */
         if(pid == 0){
             char read[PIPE_NAME_SIZE];
             sprintf(read,"temp/%dR",connectIds[i]);
@@ -195,6 +201,7 @@ int connect_nodes(char* command){
     }
 
     safe_printf("[SUCC]Nodes connected\n");
+    free(splitCommands);
     return 0;
 }
 
@@ -229,6 +236,7 @@ int disconnect_nodes(char* command){
 
 
     safe_printf("[SUCC]nodes disconnected\n");
+    free(splitCommands);
 
     return 0;
 }
@@ -302,9 +310,6 @@ int create_node(char* command){
         error_forking();
     }
 
-    if(pd > 0){
-        g_nodes[id] = pd;
-    }
 
     /* son sets up fifos and runs command */
     if(pd == 0){
@@ -317,6 +322,11 @@ int create_node(char* command){
         /* Position write and read pipes accordingly */
         char write[PIPE_NAME_SIZE];
         char read[PIPE_NAME_SIZE];
+
+        char file[PIPE_NAME_SIZE];
+        sprintf(file,"output/%dout",id);
+
+
         sprintf(write,"temp/%dW",id);
         sprintf(read,"temp/%dR",id);
 
@@ -326,7 +336,9 @@ int create_node(char* command){
 
         /* Redirect input and output*/
         dup2(openR,0); /* stop reading from stdin, read from openR */
+        close(openR);
         dup2(openW,1); /* stop writting to stdout, write to openW */
+        close(openW);
 
         /* Execute one of the four made commands */
         if(commandFlag != -1){
@@ -340,10 +352,14 @@ int create_node(char* command){
         error_executing();
     }
 
+    if(pd > 0){
+        g_nodes[id] = pd;
+    }
 
     /* dad process saved pid */
 
     safe_printf("[SUCC]Node created\n");
+    free(splitCommand);
     return 0;
 }
 
@@ -399,6 +415,14 @@ int leechers(int seeder){
     return leechers_num;
 }
 
+int total_nodes(){
+    int total = 0;
+    for(int i = 0; i < MAX_IDS; i++)
+        if(g_nodes[i] != 0)
+            total++;
+    return total;
+}
+
 /* HANDLE INJECTION
  *
  * Before calling injection, check for forking of nodes, that require injecting multiple times
@@ -415,15 +439,20 @@ void handle_injection(char* command,int current_node){
 
         char current_node_as_string[PIPE_NAME_SIZE];
         sprintf(current_node_as_string,"%d",current_node);
-        int pid;
-
-        if ( (pid = fork()) == 0 ) { /* create process to save results */
-            execl("bin/saveResults","bin/saveResults",current_node_as_string,NULL);
-            error_executing();
-        }
-
         inject_node(command);
-        wait(NULL); /* wait for output to be saved */
+
+        int pid;
+        if (g_savingScripts[current_node] == 0) { /* only call saving script if there isnt one there already */
+
+            if ( (pid = fork()) == 0) {
+                execl("bin/saveResultsScript","bin/saveResultsScript",current_node_as_string,NULL);
+                error_executing();
+            }
+
+            g_savingScripts[current_node] = pid;
+        }
+        sleep(total_nodes() / 2 ); /* sloppy estimation, change later */
+
 
     } else if (leechers(current_node) == 1) { /* only one son, continue chain without pausing communication */
 
@@ -439,7 +468,6 @@ void handle_injection(char* command,int current_node){
                 open_all_leechers(current_node);
             }
         }
-
     }
 }
 
@@ -448,7 +476,6 @@ void handle_injection(char* command,int current_node){
  */
 int inject_node(char* command){
     safe_printf("[START]injecting node\n");
-
 
     remove_newline(command);
     char** splitCommand = split_with_delimiter(command,' ');
@@ -467,9 +494,8 @@ int inject_node(char* command){
     }
     cmds[j] = NULL;
     int id = atoi(splitCommand[1]);
-    int pid;
 
-    if ( (pid = fork()) == 0 ) {
+    if ( !fork() ) {
 
         /* Create pipe */
 
@@ -477,6 +503,7 @@ int inject_node(char* command){
         sprintf(bad,"temp/%dR",id);
         int badop = open(bad,O_WRONLY);
         dup2(badop,1);
+        close(badop);
 
 
         if (cmds[0][0] != '.') {
@@ -490,8 +517,8 @@ int inject_node(char* command){
 
     }
 
-    wait(NULL);
     safe_printf("[SUCC]node injected\n");
+    free(splitCommand);
     return 0;
 }
 
@@ -521,6 +548,7 @@ int parse_command(char* command){
         int id = atoi(splitCommand[1]);
 
         handle_injection(command,id);
+        free(splitCommand);
 
     }else if(prefix_match("disconnect",command)){
         if(disconnect_nodes(command) == -1){
@@ -583,12 +611,15 @@ void main_parser(){
 
     while(readln(fp,buffer,PIPE_BUF) > 0){
         remove_newline(buffer);
-        if( write(1,"[    ]parsing ",strlen("[    ]parsing ")) == -1)
+        if (write(1,"[    ]parsing ",strlen("[    ]parsing ")) == -1){
             error_writing_terminal();
-        if( write(1,buffer,strlen(buffer)) == -1)
+        }
+        if (write(1,buffer,strlen(buffer)) == -1){
             error_writing_terminal();
-        if( write(1,"\n",1) == -1)
+        }
+        if (write(1,"\n",1) == -1){
             error_writing_terminal();
+        }
 
         parse_command(buffer);
         clean_buffer(buffer,PIPE_BUF);
