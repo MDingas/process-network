@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cat temp/"$1"W >> output/"$1"out
+exit 0
