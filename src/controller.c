@@ -264,33 +264,9 @@ int create_node(char* command){
     for(int i = 0; i < PIPE_BUF; i++)
         args[i] = malloc(sizeof(char) * PIPE_BUF);
 
-    /* tag kind of command running */
-    if(!strcmp(splitCommand[2],"const")){
-        commandFlag = 1;
-    }else if(!strcmp(splitCommand[2],"filter")){
-        commandFlag = 2;
-    }else if(!strcmp(splitCommand[2],"window")){
-        commandFlag = 3;
-    }else if(!strcmp(splitCommand[2],"spawn")){
-        commandFlag = 4;
-    }
-
-    switch(commandFlag){
-        case(1):
-            splitCommand[2] = "bin/const";
-            break;
-        case(2):
-            splitCommand[2] = "bin/filter";
-            break;
-        case(3):
-            splitCommand[2] = "bin/window";
-            break;
-        case(4):
-            splitCommand[2] = "bin/spawn";
-            break;
-        default:
-            break;
-    }
+    char fullPath[100];
+    sprintf(fullPath,"bin/%s",splitCommand[2]);
+    splitCommand[2] = fullPath; /* const -> bin/const */
 
     /* Save id and command seperately */
     int id = atoi(splitCommand[1]);
@@ -402,6 +378,30 @@ int find_only_son(int seeder){
     return -1;
 }
 
+/* EXISTS BIFURCATION
+ *
+ * Boolean return if the connection matrix has bifurcations
+ *
+ */
+
+int exists_bifurcation(){
+    int answer = 0;
+
+    for (int i = 0; i < MAX_IDS; i++) {
+        int seeders = 0;
+        for (int j = 0; j < MAX_IDS; j++) {
+            if (g_connections[i][j] != 0) {
+                seeders++;
+            }
+        }
+        if (seeders >= 2) {
+            answer = 1;
+        }
+    }
+
+    return answer;
+}
+
 /* LEECHERS
  *
  * Count how many leechers a node has (count non null connections in connection matrix)
@@ -451,7 +451,9 @@ void handle_injection(char* command,int current_node){
 
             g_savingScripts[current_node] = pid;
         }
-        sleep(total_nodes() / 2 ); /* sloppy estimation, change later */
+        if (exists_bifurcation()) { /* only sleep if there are cases of bifurcation */
+            sleep(total_nodes() / 2 ); /* sloppy estimation, change later */
+        }
 
 
     } else if (leechers(current_node) == 1) { /* only one son, continue chain without pausing communication */
