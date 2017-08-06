@@ -6,7 +6,7 @@
 CC = gcc
 CCFLAGS = -O2 -Wall -Wextra
 AUXOBJECTS = ../bin/genLibrary.o ../bin/errors.o
-EXECUTABLES = ../bin/link ../bin/const ../bin/filter ../bin/window ../bin/spawn ../bin/controller
+EXECUTABLES = ../bin/link ../bin/const ../bin/filter ../bin/window ../bin/controller
 
 # AUXILIARY FUNCTION : change all executables to the /bin folder
 define relocate
@@ -39,10 +39,6 @@ all: $(AUXOBJECTS) $(EXECUTABLES)
 ../bin/window: window.c $(AUXOBJECTS)
 	$(CC) $(CCFLAGS) -o window window.c $(AUXOBJECTS)
 	$(call relocate,window)
-
-../bin/spawn: spawn.c $(AUXOBJECTS)
-	$(CC) $(CCFLAGS) -o spawn spawn.c $(AUXOBJECTS)
-	$(call relocate,spawn)
 
 ../bin/controller: controller.c $(AUXOBJECTS)
 	$(CC) $(CCFLAGS) -o controller controller.c $(AUXOBJECTS)
