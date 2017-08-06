@@ -93,6 +93,7 @@ void clean(){
 
     if (!fork()){ /* call script that deletes all output files in the output/ directory */
         execl("bin/deleteOutput","bin/deleteOutput",NULL);
+        clean();
         error_executing();
     }
 }
@@ -253,6 +254,7 @@ int create_node(char* command){
     char** splitCommand = split_with_delimiter(command,' ');
 
     if(event_number(splitCommand) < 3){
+        clean();
         perror("[ERROR]usage: node <id> <commands with args>\n");
         exit(-1);
     }
@@ -325,6 +327,8 @@ int create_node(char* command){
             execvp(splitCommand[2],args);
 
         }
+
+        clean();
         error_executing();
     }
 
@@ -446,6 +450,7 @@ void handle_injection(char* command,int current_node){
 
             if ( (pid = fork()) == 0) {
                 execl("bin/saveResultsScript","bin/saveResultsScript",current_node_as_string,NULL);
+                clean();
                 error_executing();
             }
 
@@ -614,12 +619,15 @@ void main_parser(){
     while(readln(fp,buffer,PIPE_BUF) > 0){
         remove_newline(buffer);
         if (write(1,"[    ]parsing ",strlen("[    ]parsing ")) == -1){
+            clean();
             error_writing_terminal();
         }
         if (write(1,buffer,strlen(buffer)) == -1){
+            clean();
             error_writing_terminal();
         }
         if (write(1,"\n",1) == -1){
+            clean();
             error_writing_terminal();
         }
 
@@ -660,6 +668,7 @@ int main(){
     sigemptyset(&sigint_sa.sa_mask);
     sigint_sa.sa_flags = SA_NODEFER; /* Dont block signals to any child process */
     if (sigaction(SIGINT, &sigint_sa, NULL) == -1){
+        clean();
         perror("[ERROR]atributing signalhandler\n");
         exit(-1);
     }
