@@ -1,0 +1,8 @@
+node 1 const Phase1
+node 2 filter 2 >= 90
+node 3 filter 2 < 90
+node 4 window 2 avg 100
+node 5 window 2 avg 100
+connect 1 2 3
+connect 2 4
+connect 3 5

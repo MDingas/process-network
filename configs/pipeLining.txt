@@ -1,0 +1,19 @@
+node 1 const 10
+node 2 const 20
+node 3 const 30
+node 4 const 40
+node 5 const 50
+node 6 const 60
+node 7 const 70
+node 8 const 80
+node 9 const 90
+node 10 const 100
+connect 1 2
+connect 2 3
+connect 3 4
+connect 4 5
+connect 5 6
+connect 6 7
+connect 7 8
+connect 8 9
+connect 9 10
