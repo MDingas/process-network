@@ -72,27 +72,26 @@ int main(int argc, char** argv){
 
     while(1){ /* perpetually open */
 
-        if(read(0,buffer,sizeof(buffer)) == -1) { error_reading_terminal(); }
-        if(strlen(buffer) > 0){ /* no input and new line */
+        while(readln(0,buffer,sizeof(buffer)) > 0){
+            if(strlen(buffer) > 0){ /* no input and new line */
+                remove_newline(buffer);
+                if(event_number(split_with_delimiter(buffer,':')) < column){
+                    perror("[ERROR]invalid column\n");
+                }
+                else{
+                    long colVal = get_column(buffer,column);
 
-            remove_newline(buffer);
-            if(event_number(split_with_delimiter(buffer,':')) < column){
-                perror("[ERROR]invalid column\n");
-            }
-            else{
-                long colVal = get_column(buffer,column);
+                    colValues[i++] = colVal;
+                    long out = window(operation,colValues,lines,i);
+                    char* toAppend = long_to_string(out,NUM_DIGITS);
+                    append_value(buffer,toAppend);
+                    buffer[strlen(buffer)] = '\n';
 
-                colValues[i] = colVal;
-                long out = window(operation,colValues,lines,i);
-                i++;
-                char* toAppend = long_to_string(out,NUM_DIGITS);
-                append_value(buffer,toAppend);
-                buffer[strlen(buffer)] = '\n';
+                    if(write(1,buffer,strlen(buffer)) == -1)
+                        error_writing_terminal();
 
-                if(write(1,buffer,strlen(buffer)) == -1)
-                    error_writing_terminal();
-
-                clean_buffer(buffer,PIPE_BUF);
+                    clean_buffer(buffer,PIPE_BUF);
+                }
             }
         }
     }
