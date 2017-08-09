@@ -53,6 +53,7 @@ And creates the following map:
 <img src=http://i.imgur.com/ON180x6.png height="250">
 
 Inject as such:
-  inject 0 cat data/names.txt
+
+    inject 0 cat data/names.txt
 
 The result is two files, output/1out and output/2out, with the filtered results.
