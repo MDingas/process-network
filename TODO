@@ -1,8 +1,3 @@
-It works now, but sleep() is a sloppy estimate and it compromises time. Find better solution
-
-
-STANDARD TEST
--single node
--chained nodes
--3 nodes in V
--5 nodes
+Regarding forked graphs, It uses a sleep() whose value is an estimate of how long the cat will take.
+This is not ideal, because currently it only takes into acount the number of nodes and not the size of input.
+Possible simple fix: before doing the cat command, check the number of bytes on the file and use that value to help on the sleep() estimate.
