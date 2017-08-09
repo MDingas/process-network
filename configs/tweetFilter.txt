@@ -1,3 +1,7 @@
-node 0 const process 0
+node 0 const phase 1
 node 1 containsWord rock in rio
-node 2 const has rock in rio
+node 2 containsWord like
+node 3 containsWord love
+connect 0 1 2 3
+node 4 const music!
+connect 1 4
