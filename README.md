@@ -35,18 +35,18 @@ First we'll need a program that filters females, and another that filters males,
 
 Then, go to the main repository directory and start the program:
 
-  bin/controller
+    bin/controller
 
 and select the config file:
 
-  configs/genderFilter.txt
+    configs/genderFilter.txt
 
 which has the following
 
-  node 0 const Phase1
-  node 1 isMale
-  node 2 isFemale
-  connect 0 1 2
+    node 0 const Phase1
+    node 1 isMale
+    node 2 isFemale
+    connect 0 1 2
 
 And creates the following map:
 
