@@ -1,0 +1,8 @@
+It works now, but sleep() is a sloppy estimate and it compromises time. Find better solution
+
+
+STANDARD TEST
+-single node
+-chained nodes
+-3 nodes in V
+-5 nodes
