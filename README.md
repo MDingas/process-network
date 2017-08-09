@@ -41,8 +41,9 @@ which has the following
   node 2 isFemale
   connect 0 1 2
 And creates the following map:
+
 <img src=http://imgur.com/a/MB1jp height="250">
-(MAP HERE)
+
 Inject as such:
   inject 0 cat data/names.txt
 The result is two files, output/1out and output/2out, with the filtered results.
