@@ -30,20 +30,29 @@ Consider a list of names tagged by their gender (saved on data/names.txt), like 
     F,Bulma
 
 We wish to separate those tagged with the M character from those tagged with the F character.
+
 First we'll need a program that filters females, and another that filters males, those are isFemale and isMale, in the bin directory.
+
 Then, go to the main repository directory and start the program:
+
   bin/controller
+
 and select the config file:
+
   configs/genderFilter.txt
+
 which has the following
+
   node 0 const Phase1
   node 1 isMale
   node 2 isFemale
   connect 0 1 2
+
 And creates the following map:
 
-<img src=http://imgur.com/a/MB1jp height="250">
+<img src=http://i.imgur.com/ON180x6.png height="250">
 
 Inject as such:
   inject 0 cat data/names.txt
+
 The result is two files, output/1out and output/2out, with the filtered results.
