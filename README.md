@@ -98,3 +98,49 @@ Inject:
     inject 0 cat data/tweets.txt
 
 The result is 3 files, output/2out, output/3out and output/4out. The tweets were filtered by 3 keywords and the function const music! was only applied to the nodes that were filtered by node 1.
+
+# Example 3 : Manipulating numerical data
+
+Consider the list of possible machine data, with the following structure:
+
+<TIME>:<TEMPERATURE>
+
+As such (saved on data/temperatures.txt):
+
+    00,01:123
+    00,02:29
+    00,03:23
+    00,04:49
+    00,05:33
+    00,06:43
+    00,07:12
+    00,08:11
+    00,09:00
+    00,10:34
+    00,11:3
+    00,12:49
+    00,13:0
+    00,14:39
+    00,15:39
+    00,16:03
+    00,17:93
+    00,18:93
+    00,19:33
+    00,20:69
+    00,21:94
+    00,22:96
+
+Once again, we'll filter into two slots: those above 90 units and those below. From them on, calculate the average temperature of the 100 most recent temperatures.
+
+The config file is as follows:
+
+    node 1 const Phase1
+    node 2 filter 2 >= 90
+    node 3 filter 2 < 90
+    node 4 window 2 avg 100
+    node 5 window 2 avg 100
+    connect 1 2 3
+    connect 2 4
+    connect 3 5
+
+The results are as expected.
